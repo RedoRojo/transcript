@@ -7,7 +7,7 @@ venv/
 env/
 .pytest_cache/
 
-# Archivos multimedia temporales
+# Temporary media files
 temp_media/
 *.mp4
 *.mp3

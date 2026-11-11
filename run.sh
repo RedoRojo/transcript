@@ -5,12 +5,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 if [ ! -d ".venv" ]; then
-    echo "Creando entorno virtual..."
+    echo "Creating virtual environment..."
     python3 -m venv .venv
     .venv/bin/pip install -r requirements.txt
 fi
 
 PORT="${PORT:-8001}"
 export PORT
-echo "Iniciando servidor de transcripción en http://localhost:$PORT ..."
+echo "Starting Transcript server at http://localhost:$PORT ..."
 exec .venv/bin/python app.py
