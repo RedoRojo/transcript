@@ -1,30 +1,36 @@
+import html
 import re
 from typing import Dict, Any, List, Optional
 import requests
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import (
-    TranscriptsDisabled,
-    NoTranscriptFound,
-    VideoUnavailable,
+    AgeRestricted,
     InvalidVideoId,
     IpBlocked,
-    YouTubeRequestFailed
+    NoTranscriptFound,
+    PoTokenRequired,
+    RequestBlocked,
+    TranscriptsDisabled,
+    VideoUnavailable,
+    VideoUnplayable,
+    YouTubeRequestFailed,
 )
 
+
 def extract_video_id(url_or_id: str) -> Optional[str]:
-    """Extract 11-character YouTube video ID from various URL formats or raw ID."""
+    """Extract an 11-character YouTube video ID from various URL formats or a raw ID."""
     if not url_or_id:
         return None
     url_or_id = url_or_id.strip()
 
-    # Direct 11 character ID check
+    # Direct 11-character ID check
     if re.fullmatch(r"[0-9A-Za-z_-]{11}", url_or_id):
         return url_or_id
 
     patterns = [
         r"(?:v=|\/vi\/|\/v\/|\/embed\/|\/shorts\/|\/live\/)([0-9A-Za-z_-]{11})",
         r"(?:youtu\.be\/)([0-9A-Za-z_-]{11})",
-        r"(?:[\?&]v=)([0-9A-Za-z_-]{11})"
+        r"(?:[\?&]v=)([0-9A-Za-z_-]{11})",
     ]
 
     for pattern in patterns:
@@ -33,6 +39,7 @@ def extract_video_id(url_or_id: str) -> Optional[str]:
             return match.group(1)
 
     return None
+
 
 def format_time(seconds: float) -> str:
     """Format seconds into MM:SS or HH:MM:SS."""
@@ -44,8 +51,9 @@ def format_time(seconds: float) -> str:
         return f"{hours:02d}:{minutes:02d}:{secs:02d}"
     return f"{minutes:02d}:{secs:02d}"
 
+
 def get_video_metadata(video_id: str) -> Dict[str, Any]:
-    """Fetch video metadata using YouTube oEmbed API."""
+    """Fetch video metadata using the YouTube oEmbed API."""
     video_url = f"https://www.youtube.com/watch?v={video_id}"
     default_thumbnail = f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
     metadata = {
@@ -54,7 +62,8 @@ def get_video_metadata(video_id: str) -> Dict[str, Any]:
         "title": f"Video ({video_id})",
         "author": "YouTube",
         "author_url": "https://www.youtube.com",
-        "thumbnail_url": default_thumbnail
+        "thumbnail_url": default_thumbnail,
+        "is_local": False,
     }
 
     try:
@@ -67,59 +76,68 @@ def get_video_metadata(video_id: str) -> Dict[str, Any]:
             metadata["author_url"] = data.get("author_url", metadata["author_url"])
             metadata["thumbnail_url"] = data.get("thumbnail_url", default_thumbnail)
     except Exception:
-        # Fallback gracefully
+        # Fallback gracefully if oEmbed is unreachable
         pass
 
     return metadata
 
+
+def _matches_lang_prefix(lang_code: str, prefix: str) -> bool:
+    """Return True if lang_code matches prefix exactly or as a subtag."""
+    return lang_code == prefix or lang_code.startswith(f"{prefix}-")
+
+
 def get_transcripts_and_tracks(video_id: str, requested_lang: Optional[str] = None) -> Dict[str, Any]:
-    """
-    List available transcript tracks and fetch the selected or best matching transcript.
-    """
+    """List available transcript tracks and fetch the selected or best matching transcript."""
     metadata = get_video_metadata(video_id)
     api = YouTubeTranscriptApi()
 
     try:
         transcript_list = api.list(video_id)
     except TranscriptsDisabled:
-        raise ValueError("El video tiene los subtítulos y transcripciones desactivados por el autor.")
+        raise ValueError("Subtitles and transcripts are disabled for this video.")
     except NoTranscriptFound:
-        raise ValueError("No se encontró ninguna transcripción disponible para este video.")
-    except VideoUnavailable:
-        raise ValueError("El video no está disponible o es privado.")
+        raise ValueError("No transcript was found for this video.")
+    except AgeRestricted:
+        raise ValueError("This video is age-restricted and its transcript cannot be fetched anonymously.")
+    except (VideoUnavailable, VideoUnplayable):
+        raise ValueError("This video is unavailable, private, or unplayable.")
     except InvalidVideoId:
-        raise ValueError("El ID o enlace del video es inválido.")
-    except IpBlocked:
-        raise ValueError("YouTube ha limitado temporalmente el acceso a transcripciones desde esta IP.")
+        raise ValueError("The provided video ID or link is invalid.")
+    except (IpBlocked, RequestBlocked):
+        raise ValueError("YouTube has temporarily blocked transcript requests from this IP address.")
+    except PoTokenRequired:
+        raise ValueError("YouTube requires a Proof-of-Origin token to access transcripts for this video.")
+    except YouTubeRequestFailed as e:
+        raise ValueError(f"YouTube request failed: {str(e)}")
     except Exception as e:
-        raise ValueError(f"Error al consultar subtítulos de YouTube: {str(e)}")
+        raise ValueError(f"Failed to fetch YouTube transcripts: {str(e)}")
 
-    available_tracks = []
-    track_map = {}
+    available_tracks: List[Dict[str, Any]] = []
+    track_map: Dict[str, Any] = {}
 
     for t in transcript_list:
         track_info = {
             "language": t.language,
             "language_code": t.language_code,
             "is_generated": t.is_generated,
-            "display_name": f"{t.language} ({'autogenerado' if t.is_generated else 'manual'})"
+            "display_name": f"{t.language} ({'auto-generated' if t.is_generated else 'manual'})",
         }
         available_tracks.append(track_info)
         track_map[t.language_code] = t
 
     if not available_tracks:
-        raise ValueError("No hay pistas de transcripción disponibles para este video.")
+        raise ValueError("No transcript tracks are available for this video.")
 
-    # Determine track to fetch
+    # Select target track: requested language > manual English/Spanish > any English/Spanish > first available
     target_track = None
     if requested_lang and requested_lang in track_map:
         target_track = track_map[requested_lang]
     else:
-        # Preference: Spanish, then English, then first manual, then first available
-        pref_codes = ['es', 'es-419', 'es-ES', 'en', 'en-US', 'en-GB']
+        pref_codes = ["en", "en-US", "en-GB", "es", "es-419", "es-ES"]
         for code in pref_codes:
             for t_info in available_tracks:
-                if t_info["language_code"].startswith(code) and not t_info["is_generated"]:
+                if _matches_lang_prefix(t_info["language_code"], code) and not t_info["is_generated"]:
                     target_track = track_map[t_info["language_code"]]
                     break
             if target_track:
@@ -128,38 +146,37 @@ def get_transcripts_and_tracks(video_id: str, requested_lang: Optional[str] = No
         if not target_track:
             for code in pref_codes:
                 for t_info in available_tracks:
-                    if t_info["language_code"].startswith(code):
+                    if _matches_lang_prefix(t_info["language_code"], code):
                         target_track = track_map[t_info["language_code"]]
                         break
                 if target_track:
                     break
 
         if not target_track:
-            # Fallback to first manual or first track
             manuals = [t_info for t_info in available_tracks if not t_info["is_generated"]]
             if manuals:
                 target_track = track_map[manuals[0]["language_code"]]
             else:
                 target_track = track_map[available_tracks[0]["language_code"]]
 
-    # Fetch snippets
+    # Fetch transcript snippets
     try:
         raw_snippets = target_track.fetch()
     except Exception as e:
-        raise ValueError(f"Error al descargar la transcripción ({target_track.language}): {str(e)}")
+        raise ValueError(f"Failed to download transcript ({target_track.language}): {str(e)}")
 
-    segments = []
-    text_pieces = []
+    segments: List[Dict[str, Any]] = []
+    text_pieces: List[str] = []
     total_duration = 0.0
 
-    for idx, snippet in enumerate(raw_snippets):
-        # Raw snippet object or dict
-        text = getattr(snippet, 'text', '') if hasattr(snippet, 'text') else snippet.get('text', '')
-        start = getattr(snippet, 'start', 0.0) if hasattr(snippet, 'start') else snippet.get('start', 0.0)
-        duration = getattr(snippet, 'duration', 0.0) if hasattr(snippet, 'duration') else snippet.get('duration', 0.0)
+    for snippet in raw_snippets:
+        raw_text = getattr(snippet, "text", "") if hasattr(snippet, "text") else snippet.get("text", "")
+        start = float(getattr(snippet, "start", 0.0) if hasattr(snippet, "start") else snippet.get("start", 0.0))
+        duration = float(getattr(snippet, "duration", 0.0) if hasattr(snippet, "duration") else snippet.get("duration", 0.0))
 
-        # Clean text
-        text = text.replace('\n', ' ').strip()
+        # Unescape HTML entities and collapse internal newlines/spaces
+        text = html.unescape(raw_text).replace("\n", " ")
+        text = re.sub(r"\s+", " ", text).strip()
         if not text:
             continue
 
@@ -171,18 +188,18 @@ def get_transcripts_and_tracks(video_id: str, requested_lang: Optional[str] = No
             total_duration = end
 
         segments.append({
-            "index": idx + 1,
+            "index": len(segments) + 1,
             "start": start,
             "end": end,
             "duration": duration,
             "start_formatted": format_time(start),
             "end_formatted": format_time(end),
-            "text": text
+            "text": text,
         })
         text_pieces.append(text)
 
     full_text = " ".join(text_pieces)
-    total_words = len(full_text.split())
+    total_words = len(full_text.split()) if full_text else 0
 
     return {
         "metadata": metadata,
@@ -190,7 +207,7 @@ def get_transcripts_and_tracks(video_id: str, requested_lang: Optional[str] = No
         "current_language": {
             "language": target_track.language,
             "language_code": target_track.language_code,
-            "is_generated": target_track.is_generated
+            "is_generated": target_track.is_generated,
         },
         "segments": segments,
         "full_text": full_text,
@@ -198,6 +215,6 @@ def get_transcripts_and_tracks(video_id: str, requested_lang: Optional[str] = No
             "total_segments": len(segments),
             "total_words": total_words,
             "total_duration": total_duration,
-            "duration_formatted": format_time(total_duration)
-        }
+            "duration_formatted": format_time(total_duration),
+        },
     }
