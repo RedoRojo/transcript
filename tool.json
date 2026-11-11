@@ -1,0 +1,10 @@
+{
+  "id": "transcript",
+  "name": "Transcript (YouTube & Local)",
+  "description": "Minimalist web app for transcribing YouTube videos and local video/audio files with Whisper, synced playback, and multi-format export.",
+  "category": "Multimedia",
+  "icon": "transcript",
+  "command": "./run.sh",
+  "port": 8001,
+  "health_path": "/api/health"
+}
