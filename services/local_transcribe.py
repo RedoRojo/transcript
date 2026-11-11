@@ -296,3 +296,29 @@ def transcribe_local_file(
             "duration_formatted": format_time(total_duration),
         },
     }
+
+
+def transcribe_file(
+    file_path: str,
+    model_size: str = "base",
+    language: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Validates a local media file, extracts stream info, and transcribes it with Whisper."""
+    p = Path(file_path).expanduser().resolve()
+    if not p.is_file():
+        raise FileNotFoundError(f"File not found: {file_path}")
+    if not check_ffmpeg_available():
+        raise RuntimeError("ffmpeg/ffprobe not found in PATH. Install ffmpeg to transcribe local media.")
+
+    media_info = extract_media_metadata(str(p))
+    if not media_info.get("has_audio", False):
+        raise ValueError(f"No audio stream found in '{p.name}'.")
+
+    lang = None if not language or language.lower() == "auto" else language
+    return transcribe_local_file(
+        file_path=str(p),
+        model_size=model_size,
+        language=lang,
+        original_filename=p.name,
+        media_info=media_info,
+    )

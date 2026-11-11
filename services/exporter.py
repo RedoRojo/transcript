@@ -340,3 +340,46 @@ def export_pdf(data: Dict[str, Any], include_timestamps: bool = True) -> bytes:
 
     doc.build(story, canvasmaker=NumberedCanvas)
     return buffer.getvalue()
+
+
+SUPPORTED_EXPORT_FORMATS = ("txt", "srt", "vtt", "json", "csv", "md", "pdf")
+
+
+def sanitize_filename(name: str) -> str:
+    """Sanitize a string into a safe base filename."""
+    import re
+
+    clean = re.sub(r'[\\/*?:"<>|\x00-\x1f]', "", name or "")
+    clean = re.sub(r"\s+", "_", clean.strip())
+    return clean[:60] if clean else "transcript"
+
+
+def export_transcript(
+    data: Dict[str, Any],
+    fmt: str = "txt",
+    include_timestamps: bool = True,
+):
+    """
+    Dispatch transcript export to any supported format.
+    Returns (content: str | bytes, suggested_filename: str, media_type: str).
+    """
+    fmt = fmt.lower().strip()
+    meta = data.get("metadata", {})
+    base_name = sanitize_filename(meta.get("title", "transcript"))
+
+    if fmt == "txt":
+        return export_txt(data, include_timestamps=include_timestamps), f"{base_name}.txt", "text/plain; charset=utf-8"
+    if fmt == "srt":
+        return export_srt(data), f"{base_name}.srt", "application/x-subrip; charset=utf-8"
+    if fmt == "vtt":
+        return export_vtt(data), f"{base_name}.vtt", "text/vtt; charset=utf-8"
+    if fmt == "json":
+        return export_json(data), f"{base_name}.json", "application/json; charset=utf-8"
+    if fmt == "csv":
+        return export_csv(data), f"{base_name}.csv", "text/csv; charset=utf-8"
+    if fmt == "md":
+        return export_markdown(data, include_timestamps=include_timestamps), f"{base_name}.md", "text/markdown; charset=utf-8"
+    if fmt == "pdf":
+        return export_pdf(data, include_timestamps=include_timestamps), f"{base_name}.pdf", "application/pdf"
+
+    raise ValueError(f"Unsupported export format '{fmt}'. Choose from: {', '.join(SUPPORTED_EXPORT_FORMATS)}")

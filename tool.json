@@ -6,5 +6,6 @@
   "icon": "transcript",
   "command": "./run.sh",
   "port": 8001,
-  "health_path": "/api/health"
+  "health_path": "/api/health",
+  "cli": { "alias": "transcript", "command": "./cli.sh" }
 }

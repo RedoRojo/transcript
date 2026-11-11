@@ -1,83 +1,55 @@
 # Video & Audio Transcription (YouTube & Local Media)
 
-Minimalist web application for transcribing **YouTube** videos from a URL or video ID, as well as **local video and audio files** using AI powered by **Whisper (`faster-whisper`)**. Features interactive timestamp-synced playback and multi-format export.
+Minimalist toolkit for transcribing **YouTube** videos from a URL or video ID, as well as **local video and audio files** using AI powered by **Whisper (`faster-whisper`)**, from the **browser** or the **command line**.
 
-## Features
+## ✨ Features
 
-- **Minimalist Design**: Clean zinc/slate aesthetic with automatic system theme detection and a persistent Light/Dark toggle.
+- **Minimalist Design**: Clean zinc/slate aesthetic with automatic and manual **Light Mode** and **Dark Mode** support.
 - **Dual Media Input**:
-  - **YouTube**: Supports standard URLs (`youtube.com/watch?v=...`), shortened links (`youtu.be/...`), Shorts (`youtube.com/shorts/...`), Live/embedded links, and raw video IDs. Defaults to English or manual subtitle tracks when available.
-  - **Local Files**: Drag & drop any media file, browse from disk, or specify a local disk path directly (MP4, MKV, WebM, AVI, MOV, MP3, WAV, M4A, FLAC, OPUS, etc.).
+  - **YouTube**: Supports standard URLs (`youtube.com/watch?v=...`), shortened links (`youtu.be/...`), Shorts (`youtube.com/shorts/...`), embedded links, and raw video IDs.
+  - **Local Files**: Drag & Drop any media file or specify a local disk path directly (MP4, MKV, WebM, AVI, MOV, MP3, WAV, M4A, FLAC, etc.).
 - **Local Whisper Engine (`faster-whisper`)**:
-  - CPU-accelerated inference with INT8 quantization.
-  - Selectable models: `base` (recommended), `tiny` (ultra-fast), `small` (higher accuracy), and `medium`.
-  - Automatic language detection or explicit language selection (English, Spanish, French, German, Italian, Portuguese, Dutch, Polish, Russian, Turkish, Ukrainian, Chinese, Japanese).
-  - Voice Activity Detection (VAD) filter to skip silent segments.
-- **Synced Local Player**:
-  - Dedicated video or audio player depending on the media stream, highlighting the active transcript segment in real time and jumping to any timestamp on click.
-- **Dual Reading Modes & Keyboard Accessibility**:
-  - *Timestamps View*: Segment list with clickable timecodes and one-click copy per segment.
-  - *Continuous Text*: Clean flowing paragraphs optimized for reading or feeding into LLMs.
-  - Native modal history drawer and full keyboard navigation across tabs and menus.
-- **Real-Time Search**: Instant keyword filtering and highlighting with a live match counter.
-- **Multi-Format Export**:
-  - `.txt` (Plain text or with timestamps)
-  - `.pdf` (Formatted document with metadata and pagination)
-  - `.srt` (SubRip subtitles)
-  - `.vtt` (WebVTT captions)
-  - `.json` (Structured JSON payload)
-  - `.csv` (Spreadsheet-ready table)
-  - `.md` (Markdown with structured metadata)
-- **Quick Copy & Local History**: One-click clipboard copy and browser-persisted recent transcription history.
+  - CPU-accelerated inference with INT8 quantization (`tiny`, `base`, `small`, `medium`).
+  - Automatic language detection or manual selection, plus Voice Activity Detection (VAD).
+- **Synced Local Player & Real-Time Search**: Built-in media player synced with clickable timestamps and live keyword filtering.
+- **Multi-Format Export**: `.txt`, `.srt`, `.vtt`, `.json`, `.csv`, `.md`, and `.pdf`.
 
-## Requirements
+## 📋 Requirements
 
 - Python 3.10 or higher.
-- `ffmpeg` and `ffprobe` installed and available in `PATH` (required for local media metadata, thumbnails, and Whisper decoding).
+- `ffmpeg` installed on the system (`/usr/bin/ffmpeg`).
 
-## Installation & Usage
-
-1. Run the launcher script:
-   ```bash
-   ./run.sh
-   ```
-
-   Or set it up manually:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   python app.py
-   ```
-
-2. Open your browser at **[http://127.0.0.1:8001](http://127.0.0.1:8001)** (or launch it via **Tools Hub**).
-
-## Configuration
-
-| Environment Variable | Default | Description |
-| --- | --- | --- |
-| `HOST` | `127.0.0.1` | Bind host (`0.0.0.0` to expose on LAN). |
-| `PORT` | `8001` | HTTP server port. |
-| `RELOAD` | `0` | Set to `1` to enable Uvicorn auto-reload during development. |
-| `TRANSCRIPT_PYTHON` | *(auto-detected)* | Explicit Python interpreter path used by `run.sh`. |
-
-### Health Check
-
-`GET /api/health` returns service readiness and capability flags:
-
-```json
-{
-  "status": "ok",
-  "ffmpeg": true,
-  "whisper_available": true
-}
-```
-
-## Running Tests
-
-Install development/test dependencies and run `pytest`:
+## 🌐 Web Interface
 
 ```bash
-.venv/bin/pip install -r requirements-dev.txt
-.venv/bin/pytest -v tests/
+./run.sh
+```
+
+Open your browser at **[http://localhost:8001](http://localhost:8001)** (or launch it via **Tools Hub**).
+
+## ⌨️ Command Line Interface
+
+Via the global Tools Hub dispatcher (recommended):
+
+```bash
+tools transcript yt "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --format srt
+tools transcript yt dQw4w9WgXcQ --lang es --no-timestamps -o - | grep "palabra"
+tools transcript local lecture.mp4 --model base --lang es --format md [-o lecture.md]
+tools transcript formats [--json]
+```
+
+Or standalone from this repository: `./cli.sh <command> ...`.
+
+| Subcommand | Key Options | Description |
+| :--- | :--- | :--- |
+| `yt` | `-l/--lang`, `-f/--format`, `--no-timestamps`, `-o FILE\|-` | Fetch and export a YouTube video transcript |
+| `local` | `-m/--model tiny\|base\|small\|medium`, `-l/--lang`, `-f/--format`, `-o` | Transcribe local video/audio file(s) with Whisper |
+| `formats` | `--json` | List all supported export formats (`txt`, `srt`, `vtt`, `json`, `csv`, `md`, `pdf`) |
+
+All subcommands write output files to the **current working directory** by default (without overwriting existing files), support `-o -` to stream text directly to `stdout` for piping, and accept `--json`, `-q/--quiet`, and `-v/--verbose`.
+
+## 🧪 Running Tests
+
+```bash
+.venv/bin/python -m unittest discover -s tests -v
 ```

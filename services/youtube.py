@@ -218,3 +218,13 @@ def get_transcripts_and_tracks(video_id: str, requested_lang: Optional[str] = No
             "duration_formatted": format_time(total_duration),
         },
     }
+
+
+def transcribe_youtube(url_or_id: str, language: Optional[str] = None) -> Dict[str, Any]:
+    """Resolves a YouTube URL or video ID and fetches its transcript and available language tracks."""
+    video_id = extract_video_id(url_or_id)
+    if not video_id:
+        raise ValueError(
+            "Invalid YouTube URL or video ID. Expected youtube.com/watch?v=..., youtu.be/..., or an 11-character ID."
+        )
+    return get_transcripts_and_tracks(video_id, requested_lang=language)
