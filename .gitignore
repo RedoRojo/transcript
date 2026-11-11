@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# Archivos multimedia temporales
+temp_media/
+*.mp4
+*.mp3
+*.wav
+*.webm
+*.m4a
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transcripción de Videos | YouTube & Local</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css?v=2.0.1">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          <line x1="8" y1="10" x2="16" y2="10"></line>
+          <line x1="8" y1="14" x2="12" y2="14"></line>
+        </svg>
+        <div class="brand-info">
+          <span class="brand-title">Transcript</span>
+          <span class="brand-badge">YouTube & Local</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btnHistory" class="btn-ghost" title="Historial de transcripciones" aria-label="Abrir historial">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>Historial</span>
+          <span id="historyCount" class="counter-badge">0</span>
+        </button>
+
+        <button id="btnThemeToggle" class="btn-ghost" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema">
+          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content">
+      <!-- Search & Input Section -->
+      <section class="hero-section">
+        <h1 class="hero-title">Transcripción de videos y audio</h1>
+        <p class="hero-subtitle">Obtén la transcripción precisa de videos de YouTube o procesa archivos locales en tu equipo con Whisper.</p>
+
+        <!-- Source Selector Tabs -->
+        <div class="source-switcher" role="tablist">
+          <button type="button" id="tabSourceYoutube" class="source-tab active" role="tab" aria-selected="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path>
+              <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+            </svg>
+            <span>YouTube</span>
+          </button>
+
+          <button type="button" id="tabSourceLocal" class="source-tab" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+              <line x1="7" y1="2" x2="7" y2="22"></line>
+              <line x1="17" y1="2" x2="17" y2="22"></line>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <line x1="2" y1="7" x2="7" y2="7"></line>
+              <line x1="2" y1="17" x2="7" y2="17"></line>
+              <line x1="17" y1="17" x2="22" y2="17"></line>
+              <line x1="17" y1="7" x2="22" y2="7"></line>
+            </svg>
+            <span>Video / Audio Local</span>
+          </button>
+        </div>
+
+        <!-- 1. YouTube Panel -->
+        <div id="youtubePanel" class="source-panel">
+          <form id="transcribeForm" class="search-form">
+            <div class="search-input-wrapper">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              <input 
+                type="text" 
+                id="videoUrlInput" 
+                class="search-input" 
+                placeholder="Pega el enlace de YouTube (ej. https://youtube.com/watch?v=...)" 
+                required
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <button type="button" id="btnPaste" class="btn-inside-input" title="Pegar del portapapeles">
+                Pegar
+              </button>
+            </div>
+
+            <button type="submit" id="btnSubmit" class="btn-primary">
+              <span class="btn-text">Transcribir</span>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </form>
+
+          <!-- Quick Samples -->
+          <div class="sample-links">
+            <span class="sample-label">O prueba con un ejemplo:</span>
+            <button type="button" class="btn-chip" data-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Rick Astley</button>
+            <button type="button" class="btn-chip" data-url="https://www.youtube.com/watch?v=jNQXAC9IVRw">Primer video de YouTube</button>
+          </div>
+        </div>
+
+        <!-- 2. Local Media Panel -->
+        <div id="localPanel" class="source-panel hidden">
+          <!-- Drop Zone -->
+          <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Seleccionar o arrastrar archivo">
+            <input 
+              type="file" 
+              id="localFileInput" 
+              class="file-input-hidden" 
+              accept="video/*,audio/*,.mp4,.mkv,.webm,.avi,.mov,.flv,.wmv,.m4v,.mp3,.wav,.m4a,.ogg,.flac,.aac,.opus" 
+            />
+            <div class="drop-zone-content">
+              <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <div class="drop-text-group">
+                <span class="drop-primary-text">Arrastra un archivo de video o audio aquí</span>
+                <span class="drop-secondary-text">o haz clic para explorar en tu equipo (MP4, MKV, WebM, MP3, WAV, etc.)</span>
+              </div>
+              <div id="fileSelectedBadge" class="file-badge hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <span id="fileBadgeName" class="file-badge-name">archivo.mp4</span>
+                <button type="button" id="btnRemoveFile" class="btn-remove-file" title="Quitar archivo">&times;</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Direct Path Accordion -->
+          <div class="local-path-accordion">
+            <button type="button" id="btnTogglePath" class="btn-toggle-path">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>O especificar una ruta en disco</span>
+              <span class="path-toggle-hint">(sin subir por el navegador)</span>
+            </button>
+            <div id="pathInputWrapper" class="path-input-wrapper hidden">
+              <div class="search-input-wrapper">
+                <input 
+                  type="text" 
+                  id="localFilePathInput" 
+                  class="search-input" 
+                  placeholder="Ej: /home/usuario/Videos/grabacion.mp4" 
+                  autocomplete="off" 
+                  spellcheck="false" 
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Whisper Local Options Bar -->
+          <div class="local-options-bar">
+            <div class="option-group">
+              <label for="localModelSelect" class="option-label">Modelo Whisper:</label>
+              <select id="localModelSelect" class="select-control">
+                <option value="base" selected>Base (Equilibrado y veloz • Recomendado)</option>
+                <option value="tiny">Tiny (Ultrarrápido, menor consumo)</option>
+                <option value="small">Small (Alta precisión para acentos)</option>
+                <option value="medium">Medium (Máxima precisión)</option>
+              </select>
+            </div>
+
+            <div class="option-group">
+              <label for="localLangSelect" class="option-label">Idioma del audio:</label>
+              <select id="localLangSelect" class="select-control">
+                <option value="auto" selected>Detectar automáticamente</option>
+                <option value="es">Español</option>
+                <option value="en">Inglés</option>
+                <option value="fr">Francés</option>
+                <option value="de">Alemán</option>
+                <option value="it">Italiano</option>
+                <option value="pt">Portugués</option>
+                <option value="ru">Ruso</option>
+                <option value="zh">Chino</option>
+                <option value="ja">Japonés</option>
+              </select>
+            </div>
+
+            <button type="button" id="btnSubmitLocal" class="btn-primary">
+              <span class="btn-text">Transcribir archivo</span>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Feedback / Alert -->
+      <div id="statusAlert" class="status-alert hidden" role="alert">
+        <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span id="alertMessage" class="alert-text"></span>
+        <button type="button" id="btnCloseAlert" class="alert-close" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="loading-state hidden">
+        <div class="loading-spinner-wrapper">
+          <div class="loading-spinner"></div>
+          <span id="loadingMessage" class="loading-message">Procesando audio y transcribiendo con Whisper...</span>
+        </div>
+        <div class="skeleton-meta">
+          <div class="skeleton-thumb"></div>
+          <div class="skeleton-details">
+            <div class="skeleton-line line-lg"></div>
+            <div class="skeleton-line line-sm"></div>
+            <div class="skeleton-line line-xs"></div>
+          </div>
+        </div>
+        <div class="skeleton-text-block">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line line-md"></div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <section id="resultSection" class="result-section hidden">
+        <!-- Metadata Header Card -->
+        <div class="meta-card">
+          <div class="meta-thumb-container">
+            <img id="metaThumb" src="" alt="Miniatura del video" class="meta-thumb" />
+            <a id="metaVideoLink" href="#" target="_blank" rel="noopener noreferrer" class="meta-thumb-overlay" title="Abrir video">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+            </a>
+          </div>
+
+          <div class="meta-body">
+            <div class="meta-top">
+              <h2 id="metaTitle" class="meta-title">Título del video</h2>
+              <div class="meta-badges">
+                <span id="metaSourceBadge" class="badge">YouTube</span>
+                <span id="metaDurationBadge" class="badge">00:00</span>
+                <span id="metaWordsBadge" class="badge">0 palabras</span>
+                <span id="metaSegmentsBadge" class="badge">0 fragmentos</span>
+              </div>
+            </div>
+
+            <p id="metaAuthor" class="meta-author">Canal</p>
+
+            <!-- Language Track Selector -->
+            <div class="meta-lang-bar">
+              <label for="langSelect" class="lang-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+                Pista de idioma:
+              </label>
+              <select id="langSelect" class="lang-select"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Embedded Local Player (Shown when transcribing local video/audio) -->
+        <div id="localPlayerCard" class="local-player-card hidden">
+          <div class="player-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span>Reproductor multimedia sincronizado</span>
+            <span class="player-sub">(Haz clic en cualquier marca de tiempo para saltar a ese segundo)</span>
+          </div>
+          <div class="player-body">
+            <video id="localVideoPlayer" controls playsinline class="local-video-player"></video>
+          </div>
+        </div>
+
+        <!-- Toolbar: Controls & Export -->
+        <div class="toolbar-card">
+          <div class="toolbar-left">
+            <!-- View Mode Switcher -->
+            <div class="segmented-control" role="tablist">
+              <button type="button" id="tabSegments" class="tab-btn active" role="tab" aria-selected="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span>Marcas de tiempo</span>
+              </button>
+              <button type="button" id="tabContinuous" class="tab-btn" role="tab" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="4" y1="6" x2="20" y2="6"></line>
+                  <line x1="4" y1="12" x2="20" y2="12"></line>
+                  <line x1="4" y1="18" x2="14" y2="18"></line>
+                </svg>
+                <span>Texto continuo</span>
+              </button>
+            </div>
+
+            <!-- In-Transcript Search -->
+            <div class="transcript-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="transcriptSearchInput" placeholder="Buscar palabras..." spellcheck="false" />
+              <span id="searchMatchesCount" class="matches-count hidden">0</span>
+            </div>
+          </div>
+
+          <div class="toolbar-right">
+            <!-- Copy Actions -->
+            <button type="button" id="btnCopyPlain" class="btn-toolbar" title="Copiar texto continuo al portapapeles">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copiar texto</span>
+            </button>
+
+            <button type="button" id="btnCopyTimestamps" class="btn-toolbar" title="Copiar con marcas de tiempo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 14 14"></polyline>
+              </svg>
+              <span>Con tiempos</span>
+            </button>
+
+            <!-- Export Dropdown -->
+            <div class="dropdown-wrapper">
+              <button type="button" id="btnExportMenu" class="btn-primary-sm" aria-haspopup="true" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Exportar</span>
+                <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+
+              <div id="exportDropdown" class="dropdown-menu hidden" role="menu">
+                <div class="dropdown-header">Descargar formato</div>
+                <button type="button" class="dropdown-item" data-format="txt" data-timestamps="false" role="menuitem">
+                  <span class="fmt-badge">TXT</span>
+                  <div class="fmt-info">
+                    <span class="fmt-title">Texto Plano (.txt)</span>
+                    <span class="fmt-desc">Sin marcas de tiempo, párrafos legibles</span>
+                  </div>
+                </button>
+                <button type="button" class="dropdown-item" data-format="txt" data-timestamps="true" role="menuitem">
+                  <span class="fmt-badge">TXT</span>
+                  <div class="fmt-info">
+                    <span class="fmt-title">Texto con Tiempos (.txt)</span>
+                    <span class="fmt-desc">Con código de tiempo por línea</span>
+                  </div>
+                </button>
+                <button type="button" class="dropdown-item" data-format="pdf" data-timestamps="true" role="menuitem">
+                  <span class="fmt-badge">PDF</span>
+                  <div class="fmt-info">
+                    <span class="fmt-title">Documento PDF (.pdf)</span>
+                    <span class="fmt-desc">Minimalista y estructurado con metadatos</span>
+                  </div>
+                </button>
+                <button type="button" class="dropdown-item" data-format="srt" role="menuitem">
+                  <span class="fmt-badge">SRT</span>
+                  <div class="fmt-info">
+                    <span class="fmt-title">Subtítulos SubRip (.srt)</span>
+                    <span class="fmt-desc">Para reproductores y editores de video</span>
+                  </div>
+                </button>
+                <button type="button" class="dropdown-item" data-format="vtt" role="menuitem">
+                  <span class="fmt-badge">VTT</span>
+                  <div class="fmt-info">
+                    <span class="fmt-title">Subtítulos Web (.vtt)</span>
+                    <span class="fmt-desc">Formato estándar WebVTT</span>
+                  </div>
+                </button>
+                <button type="button" class="dropdown-item" data-format="json" role="menuitem">
+                  <span class="fmt-badge">JSON</span>
+                  <div class="fmt-info">
+                    <span class="fmt-title">Datos JSON (.json)</span>
+                    <span class="fmt-desc">Estructura cruda para desarrolladores</span>
+                  </div>
+                </button>
+                <button type="button" class="dropdown-item" data-format="csv" role="menuitem">
+                  <span class="fmt-badge">CSV</span>
+                  <div class="fmt-info">
+                    <span class="fmt-title">Hoja de cálculo (.csv)</span>
+                    <span class="fmt-desc">Tablas separadas por comas</span>
+                  </div>
+                </button>
+                <button type="button" class="dropdown-item" data-format="md" data-timestamps="true" role="menuitem">
+                  <span class="fmt-badge">MD</span>
+                  <div class="fmt-info">
+                    <span class="fmt-title">Markdown (.md)</span>
+                    <span class="fmt-desc">Para Obsidian, Notion o notas</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transcript Content Area -->
+        <div class="transcript-card">
+          <!-- Segment View -->
+          <div id="segmentsView" class="transcript-view segments-view"></div>
+
+          <!-- Continuous Text View -->
+          <div id="continuousView" class="transcript-view continuous-view hidden"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- History Drawer / Modal -->
+    <div id="historyOverlay" class="history-overlay hidden">
+      <div class="history-panel">
+        <div class="history-header">
+          <div class="history-title-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <h3>Historial reciente</h3>
+          </div>
+          <div class="history-header-actions">
+            <button type="button" id="btnClearHistory" class="btn-ghost-sm">Limpiar</button>
+            <button type="button" id="btnCloseHistory" class="btn-ghost-sm" aria-label="Cerrar panel">&times;</button>
+          </div>
+        </div>
+
+        <div id="historyList" class="history-list"></div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <span>Herramienta de transcripción minimalista • YouTube y Archivos Locales con Whisper</span>
+    </footer>
+  </div>
+
+  <script src="/static/js/app.js?v=2.0.1"></script>
+</body>
+</html>
